@@ -20,12 +20,12 @@ log_error() {
 }
 
 # Define the services
-SERVICES=("jenkins" "tomcat" "sonar" "postgresql" "ssh")
+SERVICES=("jenkins" "tomcat" "sonar" "postgresql" "grafana" "prometheus" "ssh")
 
 echo "=========================================="
 echo " Service Management Script"
 echo "=========================================="
-echo "Available: Jenkins, Tomcat, SonarQube, PostgreSQL, SSH, Ansible"
+echo "Available: Jenkins, Tomcat, SonarQube, PostgreSQL, Grafana, Prometheus, SSH, Ansible"
 echo "------------------------------------------"
 echo "Options:"
 echo "1) Stop all services"
@@ -81,7 +81,7 @@ case $choice in
         log_info "All target services started."
         ;;
     3)
-        read -p "Enter the name of the service to start (jenkins, tomcat, sonar, postgresql, ssh): " start_service
+        read -p "Enter the name of the service to start (jenkins, tomcat, sonar, postgresql, grafana, prometheus, ssh): " start_service
         # Convert to lowercase
         start_service=$(echo "$start_service" | tr '[:upper:]' '[:lower:]')
 

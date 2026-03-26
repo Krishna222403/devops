@@ -53,7 +53,10 @@ After installation and startup, access your tools at these default ports:
 - **Jenkins**: `http://<your-server-ip>:8080`
 - **Tomcat**: `http://<your-server-ip>:8085` *(Changed from default 8080 to prevent conflict with Jenkins)*
 - **SonarQube**: `http://<your-server-ip>:9000` (Default Login: `admin` / `admin`)
+- **Grafana**: `http://<your-server-ip>:3000` (Default Login: `admin` / `admin`)
+- **Prometheus**: `http://<your-server-ip>:9090`
 - **Kubernetes API Server**: `https://<master-ip>:6443` (access via `kubectl` CLI)
+- **Docker Metrics**: `http://<your-server-ip>:9323/metrics` (internal use)
 
 ## 3. How to Setup Ansible (`ansible_setup.sh`)
 
@@ -72,7 +75,59 @@ This script automates the Master-Node architecture for Ansible on AWS Ubuntu ins
    - Switch to the devops user: `su - devops`
    - Test connectivity: `ansible all -m ping`
 
-## 4. How to Setup Kubernetes (`k8s_master.sh` / `k8s_node.sh`)
+## 4. How to Setup Prometheus & Grafana
+
+This script automates the deployment of Prometheus (metrics collection) and Grafana (visualization) with Docker metrics integration.
+
+### Prerequisites
+- Docker must be installed (the script will install it if missing)
+- Ports 3000 (Grafana) and 9090 (Prometheus) must be open
+- Minimum 2GB RAM recommended
+
+### Step-by-Step Instructions
+
+1. Run the installer:
+   ```bash
+   chmod +x *.sh
+   ./install_services.sh
+   ```
+2. Choose option **8) Prometheus & Grafana**
+   - The script will:
+     - Install/verify Docker
+     - Configure Docker daemon to expose metrics on port 9323
+     - Install Grafana Enterprise on port 3000
+     - Install Prometheus on port 9090
+     - Configure Prometheus to scrape Docker metrics automatically
+3. Access Grafana: `http://<your-server-ip>:3000`
+   - Default credentials: `admin` / `admin`
+4. Access Prometheus: `http://<your-server-ip>:9090`
+
+### Integrating Prometheus with Grafana
+
+1. Login to Grafana (change default password on first login)
+2. Go to **Configuration** (gear icon) → **Data Sources**
+3. Click **Add data source** → select **Prometheus**
+4. Configure:
+   - URL: `http://localhost:9090`
+   - Click **Save & Test** (should show "Data source is working")
+5. Import a dashboard:
+   - Click **+** (import) → enter dashboard ID (e.g., `6417` for Docker monitoring)
+   - Select Prometheus as data source
+   - Click **Import**
+
+### Default Configuration
+
+- **Grafana**: `/opt/grafana/conf/defaults.ini`
+- **Prometheus**: `/opt/prometheus/prometheus.yml`
+- **Docker Metrics**: Exposed on port 9323 (automatically configured)
+
+### Managing Services
+
+Use `manage_services.sh` to start/stop/check status of both tools.
+
+---
+
+## 5. How to Setup Kubernetes (`k8s_master.sh` / `k8s_node.sh`)
 
 These scripts automate the deployment of a Kubernetes cluster using kubeadm with Docker and CRI-Dockerd as the container runtime.
 

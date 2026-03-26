@@ -31,9 +31,10 @@ echo "4) Docker CE"
 echo "5) Ansible (Master/Node)"
 echo "6) Kubernetes - Master Node"
 echo "7) Kubernetes - Worker Node"
-echo "8) Exit"
+echo "8) Prometheus & Grafana"
+echo "9) Exit"
 echo "=========================================="
-read -p "Enter your choice (1-8): " choice
+read -p "Enter your choice (1-9): " choice
 
 case $choice in
     1)
@@ -125,6 +126,16 @@ case $choice in
         fi
         ;;
     8)
+        log_info "Starting Prometheus & Grafana deployment..."
+        if [ -f "./prometheus_grafana.sh" ]; then
+            chmod +x ./prometheus_grafana.sh
+            ./prometheus_grafana.sh
+        else
+            log_error "prometheus_grafana.sh script not found in the current directory."
+            exit 1
+        fi
+        ;;
+    9)
         log_info "Exiting..."
         exit 0
         ;;

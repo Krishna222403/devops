@@ -77,11 +77,23 @@ sudo userdel -r devops || true
 sudo groupdel devops || true
 sudo rm -f /etc/sudoers.d/devops
 
-log_info "6. Cleaning up Dependencies (Java, Unzip, etc.)..."
+log_info "6. Removing Prometheus and Grafana..."
+sudo systemctl stop prometheus || true
+sudo systemctl disable prometheus || true
+sudo rm -f /etc/systemd/system/prometheus.service
+sudo rm -rf /opt/prometheus
+
+sudo systemctl stop grafana || true
+sudo systemctl disable grafana || true
+sudo rm -f /etc/systemd/system/grafana.service
+sudo rm -rf /opt/grafana
+sudo rm -rf /var/lib/grafana
+
+log_info "7. Cleaning up Dependencies (Java, Unzip, etc.)..."
 sudo apt-get autoremove -y
 sudo apt-get autoclean
 
 echo "=========================================="
 log_info " Cleanup Complete!"
-log_info " All services, Ansible, and related data have been removed."
+log_info " All services, Ansible, Prometheus, Grafana, and related data have been removed."
 echo "=========================================="
