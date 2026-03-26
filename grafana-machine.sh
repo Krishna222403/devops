@@ -120,12 +120,18 @@ EOF
         log_warn "Grafana may still be starting..."
     fi
 
+    PUBLIC_IP=$(curl -s ifconfig.me || curl -s api.ipify.org)
+    if [ -z "$PUBLIC_IP" ]; then
+        PUBLIC_IP=$(hostname -I | awk '{print $1}')
+    fi
+    [ -z "$PUBLIC_IP" ] && PUBLIC_IP="<grafana-ip>"
+
     # Configure Prometheus data source via Grafana API (if possible)
     # Note: This requires Grafana to be fully started and may need API key
     log_info "Grafana installed. You'll need to configure Prometheus data source manually:"
     echo ""
     echo "To configure Prometheus data source:"
-    echo "  1. Login to Grafana at http://<grafana-ip>:3000"
+    echo "  1. Login to Grafana at http://${PUBLIC_IP}:3000"
     echo "     - Username: admin"
     echo "     - Password: ${GRAFANA_ADMIN_PASS:-admin (change on first login)}"
     echo "  2. Go to Configuration (gear icon) → Data Sources"
@@ -147,7 +153,7 @@ EOF
     echo "Grafana version: ${GRAFANA_VERSION}"
     echo ""
     echo "Configuration:"
-    echo "  - Grafana UI: http://<this-machine-ip>:3000"
+    echo "  - Grafana UI: http://${PUBLIC_IP}:3000"
     echo "  - Prometheus data source: http://${PROMETHEUS_IP}:9090"
     echo ""
     echo "Default credentials:"
@@ -160,7 +166,7 @@ EOF
     fi
     echo ""
     echo "Next steps:"
-    echo "  1. Access Grafana at: http://<this-machine-ip>:3000"
+    echo "  1. Access Grafana at: http://${PUBLIC_IP}:3000"
     echo "  2. Login and add Prometheus data source (instructions above)"
     echo "  3. Import dashboard (e.g., Docker monitoring: ID 6417)"
     echo "=========================================="

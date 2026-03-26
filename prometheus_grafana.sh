@@ -61,8 +61,11 @@ check_privileges() {
 install_prometheus() {
     log_step "Installing Prometheus ${PROMETHEUS_VERSION}..."
 
-    LOCAL_IP=$(hostname -I | awk '{print $1}')
-    [ -z "$LOCAL_IP" ] && LOCAL_IP="localhost"
+    PUBLIC_IP=$(curl -s ifconfig.me || curl -s api.ipify.org)
+    if [ -z "$PUBLIC_IP" ]; then
+        PUBLIC_IP=$(hostname -I | awk '{print $1}')
+    fi
+    [ -z "$PUBLIC_IP" ] && PUBLIC_IP="localhost"
 
     PROMETHEUS_TAR="prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz"
     log_info "Downloading Prometheus..."
@@ -98,7 +101,7 @@ rule_files:
 scrape_configs:
   - job_name: "prometheus"
     static_configs:
-      - targets: ["${LOCAL_IP}:9090"]
+      - targets: ["localhost:9090"]
 ${SCRAPE_BLOCK}
 EOF
 
@@ -135,7 +138,7 @@ EOF
     sudo systemctl status prometheus --no-pager -n 3
 
     if curl -s http://localhost:9090/-/ready > /dev/null 2>&1; then
-        log_info "✓ Prometheus is ready at http://${LOCAL_IP}:9090"
+        log_info "✓ Prometheus is ready at http://${PUBLIC_IP}:9090"
     else
         log_warn "Prometheus may still be starting up. Check: sudo systemctl status prometheus"
     fi
@@ -147,8 +150,7 @@ EOF
 install_grafana() {
     log_step "Installing Grafana Enterprise ${GRAFANA_VERSION}..."
 
-    LOCAL_IP=$(hostname -I | awk '{print $1}')
-    [ -z "$LOCAL_IP" ] && LOCAL_IP="localhost"
+
 
     GRAFANA_TAR="grafana-enterprise-${GRAFANA_VERSION}.linux-amd64.tar.gz"
     log_info "Downloading Grafana Enterprise..."
@@ -244,16 +246,19 @@ EOF
 # Summary
 # -------------------------------------------------------
 print_summary() {
-    LOCAL_IP=$(hostname -I | awk '{print $1}')
-    [ -z "$LOCAL_IP" ] && LOCAL_IP="<this-machine-ip>"
+    PUBLIC_IP=$(curl -s ifconfig.me || curl -s api.ipify.org)
+    if [ -z "$PUBLIC_IP" ]; then
+        PUBLIC_IP=$(hostname -I | awk '{print $1}')
+    fi
+    [ -z "$PUBLIC_IP" ] && PUBLIC_IP="<this-machine-ip>"
 
     echo ""
     echo "=========================================="
     echo " Prometheus & Grafana Setup Complete!"
     echo "=========================================="
     echo ""
-    echo "  Prometheus UI : http://${LOCAL_IP}:9090"
-    echo "  Grafana UI    : http://${LOCAL_IP}:3000"
+    echo "  Prometheus UI : http://${PUBLIC_IP}:9090"
+    echo "  Grafana UI    : http://${PUBLIC_IP}:3000"
     echo ""
     echo "  Grafana credentials:"
     echo "    Username : admin"
@@ -268,10 +273,10 @@ print_summary() {
     fi
     echo ""
     echo "  Next steps:"
-    echo "    1. Open Grafana: http://${LOCAL_IP}:3000"
+    echo "    1. Open Grafana: http://${PUBLIC_IP}:3000"
     echo "    2. Prometheus data source is pre-configured."
     echo "    3. Import a dashboard (e.g., Docker monitoring ID: 6417)"
-    echo "    4. Check Prometheus targets: http://${LOCAL_IP}:9090/targets"
+    echo "    4. Check Prometheus targets: http://${PUBLIC_IP}:9090/targets"
     echo "=========================================="
 }
 

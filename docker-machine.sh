@@ -134,6 +134,12 @@ EOF
         log_warn "Docker metrics endpoint test failed. Docker may still be starting..."
     fi
 
+    PUBLIC_IP=$(curl -s ifconfig.me || curl -s api.ipify.org)
+    if [ -z "$PUBLIC_IP" ]; then
+        PUBLIC_IP=$(hostname -I | awk '{print $1}')
+    fi
+    [ -z "$PUBLIC_IP" ] && PUBLIC_IP="<this-machine-ip>"
+
     echo ""
     echo "=========================================="
     echo " Docker Machine Setup Complete!"
@@ -143,7 +149,7 @@ EOF
     echo "Docker Compose version: $(sudo docker compose version 2>/dev/null || echo 'Not available')"
     echo ""
     echo "Configuration:"
-    echo "  - Docker metrics endpoint: http://<this-machine-ip>:9323/metrics"
+    echo "  - Docker metrics endpoint: http://${PUBLIC_IP}:9323/metrics"
     echo ""
     if [ "$ACTUAL_USER" != "root" ]; then
         echo "To use Docker without sudo:"

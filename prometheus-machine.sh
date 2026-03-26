@@ -62,10 +62,13 @@ install_prometheus() {
     check_privileges
     log_info "Starting Prometheus installation..."
 
-    # Get the server's IP address
-    PROMETHEUS_IP=$(hostname -I | awk '{print $1}')
-    if [ -z "$PROMETHEUS_IP" ]; then
-        PROMETHEUS_IP="localhost"
+    # Get the server's public IP address (fallback to private IP)
+    PUBLIC_IP=$(curl -s ifconfig.me || curl -s api.ipify.org)
+    if [ -z "$PUBLIC_IP" ]; then
+        PUBLIC_IP=$(hostname -I | awk '{print $1}')
+    fi
+    if [ -z "$PUBLIC_IP" ]; then
+        PUBLIC_IP="localhost"
     fi
 
     # Download Prometheus
@@ -95,7 +98,7 @@ rule_files:
 scrape_configs:
   - job_name: "prometheus"
     static_configs:
-      - targets: ["${PROMETHEUS_IP}:9090"]
+      - targets: ["localhost:9090"]
 
   - job_name: "docker"
     static_configs:
@@ -139,7 +142,7 @@ EOF
     log_info "Verifying Prometheus is accessible..."
     sleep 5
     if curl -s http://localhost:9090/-/ready > /dev/null; then
-        log_info "✓ Prometheus is ready at http://${PROMETHEUS_IP}:9090"
+        log_info "✓ Prometheus is ready at http://${PUBLIC_IP}:9090"
     else
         log_warn "Prometheus may still be starting..."
     fi
@@ -152,15 +155,15 @@ EOF
     echo "Prometheus version: $(/opt/prometheus/prometheus --version 2>/dev/null || echo "Unknown")"
     echo ""
     echo "Configuration:"
-    echo "  - Prometheus UI: http://${PROMETHEUS_IP}:9090"
+    echo "  - Prometheus UI: http://${PUBLIC_IP}:9090"
     echo "  - Scraping Docker metrics from: ${DOCKER_MACHINE_IP}:9323/metrics"
     echo "  - Grafana integration target: ${GRAFANA_IP}:3000"
     echo ""
     echo "Next steps:"
-    echo "  1. Access Prometheus at: http://${PROMETHEUS_IP}:9090"
+    echo "  1. Access Prometheus at: http://${PUBLIC_IP}:9090"
     echo "  2. On Grafana machine:"
-    echo "     - Add Prometheus as data source: http://${PROMETHEUS_IP}:9090"
-    echo "  3. Verify targets at: http://${PROMETHEUS_IP}:9090/targets"
+    echo "     - Add Prometheus as data source: http://${PUBLIC_IP}:9090"
+    echo "  3. Verify targets at: http://${PUBLIC_IP}:9090/targets"
     echo "=========================================="
 }
 
