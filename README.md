@@ -53,10 +53,10 @@ After installation and startup, access your tools at these default ports:
 - **Jenkins**: `http://<your-server-ip>:8080`
 - **Tomcat**: `http://<your-server-ip>:8085` *(Changed from default 8080 to prevent conflict with Jenkins)*
 - **SonarQube**: `http://<your-server-ip>:9000` (Default Login: `admin` / `admin`)
-- **Grafana**: `http://<your-server-ip>:3000` (Default Login: `admin` / `admin`)
-- **Prometheus**: `http://<your-server-ip>:9090`
+- **Grafana**: `http://<grafana-machine-ip>:3000` (Default Login: `admin` / `admin`)
+- **Prometheus**: `http://<prometheus-machine-ip>:9090`
 - **Kubernetes API Server**: `https://<master-ip>:6443` (access via `kubectl` CLI)
-- **Docker Metrics**: `http://<your-server-ip>:9323/metrics` (internal use)
+- **Docker Metrics**: `http://<docker-machine-ip>:9323/metrics` (for Prometheus scraping)
 
 ## 3. How to Setup Ansible (`ansible_setup.sh`)
 
@@ -75,23 +75,20 @@ This script automates the Master-Node architecture for Ansible on AWS Ubuntu ins
    - Switch to the devops user: `su - devops`
    - Test connectivity: `ansible all -m ping`
 
-## 4. How to Setup Prometheus & Grafana
+## 4. How to Setup Monitoring (Prometheus & Grafana)
 
-This script automates the deployment of Prometheus (metrics collection) and Grafana (visualization) with Docker metrics integration.
+You have two options for setting up Prometheus and Grafana:
 
-### Prerequisites
-- Docker must be installed (the script will install it if missing)
-- Ports 3000 (Grafana) and 9090 (Prometheus) must be open
-- Minimum 2GB RAM recommended
+### Option A: All-in-One Setup (Single Machine)
+This installs Docker, Prometheus, and Grafana on the same machine.
 
-### Step-by-Step Instructions
-
+#### Step-by-Step Instructions
 1. Run the installer:
    ```bash
    chmod +x *.sh
    ./install_services.sh
    ```
-2. Choose option **8) Prometheus & Grafana**
+2. Choose option **8) Prometheus & Grafana (All-in-One)**
    - The script will:
      - Install/verify Docker
      - Configure Docker daemon to expose metrics on port 9323
@@ -102,28 +99,71 @@ This script automates the deployment of Prometheus (metrics collection) and Graf
    - Default credentials: `admin` / `admin`
 4. Access Prometheus: `http://<your-server-ip>:9090`
 
-### Integrating Prometheus with Grafana
+### Option B: Distributed Setup (3 Machines)
+For production environments, you can run each component on separate machines for better performance and isolation.
 
-1. Login to Grafana (change default password on first login)
+#### Machine 1: Docker Machine (Metrics Exporter)
+Installs Docker and configures it to expose metrics for scraping.
+1. Run the installer:
+   ```bash
+   chmod +x *.sh
+   ./install_services.sh
+   ```
+2. Choose option **9) Docker Machine (Metrics Exporter)**
+3. Note the machine's IP address
+
+#### Machine 2: Prometheus Server
+Installs Prometheus and configures it to scrape metrics.
+1. Run the installer:
+   ```bash
+   chmod +x *.sh
+   ./install_services.sh
+   ```
+2. Choose option **10) Prometheus Machine**
+3. Enter the Docker machine IP when prompted
+4. Note this machine's IP address
+
+#### Machine 3: Grafana Server
+Installs Grafana and configures Prometheus as a data source.
+1. Run the installer:
+   ```bash
+   chmod +x *.sh
+   ./install_services.sh
+   ```
+2. Choose option **11) Grafana Machine**
+3. Enter the Prometheus machine IP when prompted
+4. Access Grafana: `http://<grafana-machine-ip>:3000`
+   - Default credentials: `admin` / `admin` (change on first login)
+
+### Integrating Prometheus with Grafana (Distributed Setup)
+1. Login to Grafana at `http://<grafana-machine-ip>:3000`
 2. Go to **Configuration** (gear icon) → **Data Sources**
 3. Click **Add data source** → select **Prometheus**
 4. Configure:
-   - URL: `http://localhost:9090`
+   - Name: Prometheus
+   - URL: `http://<prometheus-machine-ip>:9090`
    - Click **Save & Test** (should show "Data source is working")
 5. Import a dashboard:
    - Click **+** (import) → enter dashboard ID (e.g., `6417` for Docker monitoring)
    - Select Prometheus as data source
    - Click **Import**
 
-### Default Configuration
+### Default Ports
+- **Grafana**: 3000
+- **Prometheus**: 9090
+- **Docker Metrics**: 9323 (for scraping)
+- **Jenkins**: 8080
+- **Tomcat**: 8085
+- **SonarQube**: 9000
+- **Kubernetes API Server**: 6443
 
+### Default Configuration Files
 - **Grafana**: `/opt/grafana/conf/defaults.ini`
 - **Prometheus**: `/opt/prometheus/prometheus.yml`
-- **Docker Metrics**: Exposed on port 9323 (automatically configured)
+- **Docker Daemon**: `/etc/docker/daemon.json`
 
 ### Managing Services
-
-Use `manage_services.sh` to start/stop/check status of both tools.
+Use `manage_services.sh` to start/stop/check status of services on each machine.
 
 ---
 

@@ -20,7 +20,7 @@ log_error() {
 }
 
 # Define the services
-SERVICES=("jenkins" "tomcat" "sonar" "postgresql" "grafana" "prometheus" "ssh")
+SERVICES=("jenkins" "tomcat" "sonar" "postgresql" "grafana" "prometheus" "docker" "ssh")
 
 echo "=========================================="
 echo " Service Management Script"
@@ -52,6 +52,15 @@ case $choice in
                 else
                     log_warn "Tomcat shutdown script not found."
                 fi
+            elif [ "$service" == "grafana" ]; then
+                log_info "Stopping Grafana..."
+                sudo systemctl stop grafana || log_error "Failed to stop grafana"
+            elif [ "$service" == "prometheus" ]; then
+                log_info "Stopping Prometheus..."
+                sudo systemctl stop prometheus || log_error "Failed to stop prometheus"
+            elif [ "$service" == "docker" ]; then
+                log_info "Stopping Docker..."
+                sudo systemctl stop docker || log_error "Failed to stop docker"
             else
                 log_info "Stopping $service..."
                 sudo systemctl stop $service || log_error "Failed to stop $service (might not be installed or running)"
@@ -72,6 +81,18 @@ case $choice in
                 else
                     log_warn "Tomcat startup script not found."
                 fi
+            elif [ "$service" == "grafana" ]; then
+                log_info "Starting Grafana..."
+                sudo systemctl start grafana
+                sudo systemctl status grafana --no-pager
+            elif [ "$service" == "prometheus" ]; then
+                log_info "Starting Prometheus..."
+                sudo systemctl start prometheus
+                sudo systemctl status prometheus --no-pager
+            elif [ "$service" == "docker" ]; then
+                log_info "Starting Docker..."
+                sudo systemctl start docker
+                sudo systemctl status docker --no-pager
             else
                 log_info "Starting $service..."
                 sudo systemctl start $service
@@ -81,7 +102,7 @@ case $choice in
         log_info "All target services started."
         ;;
     3)
-        read -p "Enter the name of the service to start (jenkins, tomcat, sonar, postgresql, grafana, prometheus, ssh): " start_service
+        read -p "Enter the name of the service to start (jenkins, tomcat, sonar, postgresql, grafana, prometheus, docker, ssh): " start_service
         # Convert to lowercase
         start_service=$(echo "$start_service" | tr '[:upper:]' '[:lower:]')
 
@@ -95,12 +116,24 @@ case $choice in
             else
                 log_warn "Tomcat startup script not found."
             fi
+        elif [ "$start_service" == "grafana" ]; then
+            log_info "Starting Grafana..."
+            sudo systemctl start grafana
+            sudo systemctl status grafana --no-pager
+        elif [ "$start_service" == "prometheus" ]; then
+            log_info "Starting Prometheus..."
+            sudo systemctl start prometheus
+            sudo systemctl status prometheus --no-pager
+        elif [ "$start_service" == "docker" ]; then
+            log_info "Starting Docker..."
+            sudo systemctl start docker
+            sudo systemctl status docker --no-pager
         elif [[ " ${SERVICES[@]} " =~ " ${start_service} " ]]; then
             log_info "Starting $start_service..."
             sudo systemctl start $start_service
             sudo systemctl status $start_service --no-pager
         else
-            log_error "Invalid service name. Allowed values: jenkins, tomcat, sonar, postgresql, ssh"
+            log_error "Invalid service name. Allowed values: jenkins, tomcat, sonar, postgresql, grafana, prometheus, docker, ssh"
         fi
         ;;
     4)

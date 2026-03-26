@@ -31,10 +31,13 @@ echo "4) Docker CE"
 echo "5) Ansible (Master/Node)"
 echo "6) Kubernetes - Master Node"
 echo "7) Kubernetes - Worker Node"
-echo "8) Prometheus & Grafana"
-echo "9) Exit"
+echo "8) Prometheus & Grafana (All-in-One)"
+echo "9) Docker Machine (Metrics Exporter)"
+echo "10) Prometheus Machine"
+echo "11) Grafana Machine"
+echo "12) Exit"
 echo "=========================================="
-read -p "Enter your choice (1-9): " choice
+read -p "Enter your choice (1-12): " choice
 
 case $choice in
     1)
@@ -126,7 +129,7 @@ case $choice in
         fi
         ;;
     8)
-        log_info "Starting Prometheus & Grafana deployment..."
+        log_info "Starting Prometheus & Grafana deployment (All-in-One)..."
         if [ -f "./prometheus_grafana.sh" ]; then
             chmod +x ./prometheus_grafana.sh
             ./prometheus_grafana.sh
@@ -136,6 +139,36 @@ case $choice in
         fi
         ;;
     9)
+        log_info "Starting Docker Machine setup (Metrics Exporter)..."
+        if [ -f "./docker-machine.sh" ]; then
+            chmod +x ./docker-machine.sh
+            ./docker-machine.sh
+        else
+            log_error "docker-machine.sh script not found in the current directory."
+            exit 1
+        fi
+        ;;
+    10)
+        log_info "Starting Prometheus Machine setup..."
+        if [ -f "./prometheus-machine.sh" ]; then
+            chmod +x ./prometheus-machine.sh
+            ./prometheus-machine.sh
+        else
+            log_error "prometheus-machine.sh script not found in the current directory."
+            exit 1
+        fi
+        ;;
+    11)
+        log_info "Starting Grafana Machine setup..."
+        if [ -f "./grafana-machine.sh" ]; then
+            chmod +x ./grafana-machine.sh
+            ./grafana-machine.sh
+        else
+            log_error "grafana-machine.sh script not found in the current directory."
+            exit 1
+        fi
+        ;;
+    12)
         log_info "Exiting..."
         exit 0
         ;;
