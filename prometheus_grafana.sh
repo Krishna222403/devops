@@ -124,7 +124,14 @@ install_grafana() {
 
     # Extract
     tar -zxvf "/tmp/${GRAFANA_TAR}" -C /opt/
-    sudo mv "/opt/grafana-${GRAFANA_VERSION}" /opt/grafana
+    # The extracted directory is named grafana-v11.1.4 (with 'v'), handle both cases
+    EXTRACTED_DIR=$(find /opt -maxdepth 1 -type d -name "grafana*${GRAFANA_VERSION}*" | head -n 1)
+    if [ -n "$EXTRACTED_DIR" ]; then
+        sudo mv "$EXTRACTED_DIR" /opt/grafana
+    else
+        log_error "Could not find extracted Grafana directory"
+        exit 1
+    fi
 
     # Clean up
     rm "/tmp/${GRAFANA_TAR}"
